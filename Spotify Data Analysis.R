@@ -22,9 +22,42 @@ SPOT_RED = adjustcolor("red", alpha.f = 0.75)
 
 spotify <- read.csv("data/ch3f.csv")
 playlist <- read.csv("data/playlist.csv")
+monthly_listeners <- read.csv("data/monthly_listeners.csv")
 
 ## Set the date language to English
 Sys.setlocale("LC_TIME", "en_US")
+
+#########################################
+### LOADING montly_listeners DATASET
+#########################################
+
+## Selecting only first 4 columns
+monthly_listeners <- monthly_listeners[1:4]
+
+## Turning Dates to the correct format
+monthly_listeners$Date <- as.Date(monthly_listeners$Date, format = "%b %d, %Y")
+
+## Express Monthly.Listeners variable in thousand
+monthly_listeners$Monthly.Listeners <- monthly_listeners$Monthly.Listeners / 1000
+
+## Checking NA
+any(is.na(spotify))
+
+## Extracting Releases
+releases <- monthly_listeners[monthly_listeners$Releases != "", ]
+
+#### Song Release Plot
+## Plot the data using base R graphics
+plot(monthly_listeners$Date, monthly_listeners$Monthly.Listeners, type="l", lwd = 2, col=adjustcolor(SPOT_BLUE, alpha.f = 0.2), xlab = "Time", ylab = "Monthly Listeners (in k)", main = "Song Releases", xaxt=NULL, yaxt="n", bty = "n", axes=T, ylim=c(min(monthly_listeners$Monthly.Listeners), max(monthly_listeners$Monthly.Listeners)))
+## Add x-axis
+axis(2, las=1, cex.axis=0.8, tck=1, col = adjustcolor(SPOT_BLUE, alpha.f = 0.2), lwd = 0, lwd.ticks = 1)
+## Add points
+points(releases$Date, releases$Monthly.Listeners, pch = 16, cex=1, col = SPOT_BLUE_2)
+## Add text labels for each song release with adjusted positions
+for (i in 1:nrow(releases)) {
+  text(releases$Date[i], releases$Monthly.Listeners[i], labels = releases$Releases[i],
+       pos = ifelse(i %% 2 == 0, 1, 3), cex = 0.4, font=2)
+}
 
 #########################################
 ### LOADING spotify DATASET
@@ -155,8 +188,8 @@ weeks <- as.Date(time(weekly.xts$streams), format = "%Y-%m-%d")
 
 myplot(weekly$streams)
 myplot(weekly$listeners, title = "Listeners", ylab = "Listeners (in k)")
-myplot(weekly$followers, title = "Followers", ylab = "Followers (in k)")
-myplot(weekly$plst.count, title = "Number of Playlists", ylab = "N. of Playlists (in k)")
+myplot(weekly$followers*1000, title = "Followers", ylab = "Followers")
+myplot(weekly$plst.count*1000, title = "Number of Playlists", ylab = "N. of Playlists")
 myplot(weekly$plst.reach, title = "Potential Audience (from Private Playlists)", ylab = "Potential Audience (in k)")
 
 # Calculate the correlation matrix 
