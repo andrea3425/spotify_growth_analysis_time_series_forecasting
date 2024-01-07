@@ -31,33 +31,38 @@ Sys.setlocale("LC_TIME", "en_US")
 ### LOADING montly_listeners DATASET
 #########################################
 
-## Selecting only first 4 columns
-monthly_listeners <- monthly_listeners[1:4]
-
 ## Turning Dates to the correct format
 monthly_listeners$Date <- as.Date(monthly_listeners$Date, format = "%b %d, %Y")
+
+## Selecting only needed rows and cols
+end = "2023-10-18"
+start_idx <- 1
+end_idx <- which(monthly_listeners$Date == as.Date(end))
+monthly_listeners <- monthly_listeners[start_idx:end_idx, 1:4]
 
 ## Express Monthly.Listeners variable in thousand
 monthly_listeners$Monthly.Listeners <- monthly_listeners$Monthly.Listeners / 1000
 
 ## Checking NA
-any(is.na(spotify))
+any(is.na(monthly_listeners))
 
 ## Extracting Releases
 releases <- monthly_listeners[monthly_listeners$Releases != "", ]
+releases
 
 #### Song Release Plot
-## Plot the data using base R graphics
-plot(monthly_listeners$Date, monthly_listeners$Monthly.Listeners, type="l", lwd = 2, col=adjustcolor(SPOT_BLUE, alpha.f = 0.2), xlab = "Time", ylab = "Monthly Listeners (in k)", main = "Song Releases", xaxt=NULL, yaxt="n", bty = "n", axes=T, ylim=c(min(monthly_listeners$Monthly.Listeners), max(monthly_listeners$Monthly.Listeners)))
-## Add x-axis
-axis(2, las=1, cex.axis=0.8, tck=1, col = adjustcolor(SPOT_BLUE, alpha.f = 0.2), lwd = 0, lwd.ticks = 1)
-## Add points
-points(releases$Date, releases$Monthly.Listeners, pch = 16, cex=1, col = SPOT_BLUE_2)
-## Add text labels for each song release with adjusted positions
-for (i in 1:nrow(releases)) {
-  text(releases$Date[i], releases$Monthly.Listeners[i], labels = releases$Releases[i],
-       pos = ifelse(i %% 2 == 0, 1, 3), cex = 0.4, font=2)
+#pdf("models.pdf", width=10, height=6)
+# Your existing plot code
+plot(monthly_listeners$Date, monthly_listeners$Monthly.Listeners, type="l", lwd=1.2, col=adjustcolor("black", alpha.f=0.9), xlab="Time", ylab="Monthly Listeners (in k)", main="Song Releases", xaxt=NULL, yaxt=NULL, bty="l", axes=T, ylim=c(min(monthly_listeners$Monthly.Listeners), 200))
+# Add x-axis
+#axis(2, las=1, cex.axis=0.8, tck=1, col=adjustcolor(SPOT_BLUE, alpha.f=0.1), lwd=0, lwd.ticks=1)
+# Add points
+points(releases$Date, releases$Monthly.Listeners, pch=16, cex=1.5, col=SPOT_RED)
+# Add text labels for each song release with adjusted positions
+for (i in c(7, 12)) {
+  text(releases$Date[i], releases$Monthly.Listeners[i]+5, labels=releases$Releases[i], pos=2, cex=0.8, font=2)
 }
+#dev.off()
 
 #########################################
 ### LOADING spotify DATASET
@@ -150,7 +155,7 @@ myplot <- function(data, type="l", lwd = 3, color=SPOT_BLUE_2, alpha = 0.5, xlab
   # Plot the curve
   plot(data, type = type, col=color, lwd=lwd, xlab = xlab, ylab = ylab, main = title, xaxt=xaxt, yaxt=yaxt, xlim=xlim, ylim=ylim, axes=FALSE)
   # Add colored area below the curve
-  polygon(c(time(data), rev(time(data))), c(rep(0, length(data)), rev(data)), col = adjustcolor(color, alpha.f = 0.2), border = NA)
+  polygon(c(time(data), rev(time(data))), c(rep(0, length(data)), rev(data)), col = adjustcolor(color, alpha.f = 0.3), border = NA)
   # Add grid
   #grid(nx = 0, ny = 5, col = "#878787", lty = 1, lwd = 1, equilogs = TRUE)
   #axis(2, at = c(20, 40, 60, 80, 100, 120), tck = 1, lty = 1, col = "#878787", labels = NA)
@@ -192,11 +197,18 @@ myplot(weekly$followers*1000, title = "Followers", ylab = "Followers")
 myplot(weekly$plst.count*1000, title = "Number of Playlists", ylab = "N. of Playlists")
 myplot(weekly$plst.reach, title = "Potential Audience (from Private Playlists)", ylab = "Potential Audience (in k)")
 
+diff.plst.reach <- diff(weekly$plst.reach)
+diff.plst.reach <- c(diff.plst.reach[1], diff.plst.reach)
+myplot(diff.plst.reach)
+
+avg_reach <- weekly$plst.reach / weekly$plst.count
+myplot(avg_reach)
+
 # Calculate the correlation matrix 
-cor_matrix = cor(weekly) 
+cor_matrix = cor(weekly)
 
 # Create the correlogram 
-corrplot(cor_matrix, type = "upper",  
+corrplot(cor_matrix[2:5, 2:5], type = "upper",  
          method = "color",
          col= colorRampPalette(c(SPOT_BLUE_2,"white", SPOT_GREEN))(10),
          addCoef.col = "black",  
@@ -237,7 +249,7 @@ acf(streams.ts)
 #########################################
 
 ## Include the effect of Audience
-fit_2 <- tslm(streams.ts ~ weekly$plst.reach)
+fit_2 <- tslm(streams.ts ~ weekly$plst.reach+avg_reach)
 summary(fit_2)
 
 ## Plotting the model
@@ -305,6 +317,30 @@ mylines(pred_GBMe1str, col = "red")
 
 myplot(streams.ts, xlim=c(1,200), ylim=c(1, max(pred_GBMe1str.inst)*1.1/1000))
 mylines(pred_GBMe1str.inst, col = "red")
+
+#########################################
+### BM e GBM LISTENERS
+#########################################
+
+## Creating ts object
+listeners.ts <- ts(weekly$listeners)
+
+## Fitting Bass Model
+bm_list <- BM(listeners.ts, display = F)
+summary(bm_list)
+
+###GBM With Exponential Shock (with Listeners)
+GBM_e1lst<- GBM(listeners.ts, shock = "exp", nshock = 1, prelimestimates = c(6.195036e+06, 8.101652e-04, 3.891079e-02, 70, +0.1, +0.1), display = F)
+summary(GBM_e1lst)
+
+pred_GBM_e1lst<- predict(GBM_e1lst, newx=c(1:200))
+pred_GBM_e1lst.inst<- make.instantaneous(pred_GBM_e1lst)
+
+myplot(cumsum(listeners.ts), lwd = 8,ylab="Cumulative Listeners (in k)", xlim=c(1,200), ylim=c(0, max(pred_GBM_e1lst) * 1.1/1000))
+mylines(pred_GBM_e1lst, col = "red")
+
+myplot(listeners.ts, xlim=c(1,200), ylim=c(1, max(pred_GBM_e1lst.inst)*1.1/1000))
+mylines(pred_GBM_e1lst.inst, col = "red")
 
 #########################################
 ### GUSEO-GUIDOLIN MODEL
