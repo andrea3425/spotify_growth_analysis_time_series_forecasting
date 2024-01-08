@@ -8,6 +8,7 @@ library(DIMORA)
 library(fpp2)
 library(xts)
 library(corrplot)
+library(TTR)
 ##############################################
 
 #########################################
@@ -18,7 +19,7 @@ SPOT_GREEN = "#1DB954"
 SPOT_BLUE = "#040504"
 SPOT_BLUE_2 = "#1072eb"
 SPOT_BLUE_3 = "#d4e2fc"
-SPOT_RED = adjustcolor("red", alpha.f = 0.75)
+SPOT_RED = adjustcolor("red", alpha.f = 1)
 
 spotify <- read.csv("data/ch3f.csv")
 playlist <- read.csv("data/playlist.csv")
@@ -50,19 +51,83 @@ any(is.na(monthly_listeners))
 releases <- monthly_listeners[monthly_listeners$Releases != "", ]
 releases
 
-#### Song Release Plot
-#pdf("models.pdf", width=10, height=6)
-# Your existing plot code
-plot(monthly_listeners$Date, monthly_listeners$Monthly.Listeners, type="l", lwd=1.2, col=adjustcolor("black", alpha.f=0.9), xlab="Time", ylab="Monthly Listeners (in k)", main="Song Releases", xaxt=NULL, yaxt=NULL, bty="l", axes=T, ylim=c(min(monthly_listeners$Monthly.Listeners), 200))
-# Add x-axis
-#axis(2, las=1, cex.axis=0.8, tck=1, col=adjustcolor(SPOT_BLUE, alpha.f=0.1), lwd=0, lwd.ticks=1)
-# Add points
-points(releases$Date, releases$Monthly.Listeners, pch=16, cex=1.5, col=SPOT_RED)
-# Add text labels for each song release with adjusted positions
-for (i in c(7, 12)) {
-  text(releases$Date[i], releases$Monthly.Listeners[i]+5, labels=releases$Releases[i], pos=2, cex=0.8, font=2)
-}
+#########################################
+#### Song Release Plot 2
+d1 <- which(monthly_listeners$Date == as.Date("2020-12-31"))
+d2 <- which(monthly_listeners$Date == as.Date("2021-12-17 "))
+d3 <- 1229
+d4 <- 1653
+
+## Plot 0
+#pdf("release 0.pdf", width=10, height=6)
+plot(monthly_listeners$Date, monthly_listeners$Monthly.Listeners, type="l", lwd=1.2, col=adjustcolor("black", alpha.f=0), xlab="Time", ylab="Monthly Listeners (in k)", main="Song Releases", xaxt=NULL, yaxt=NULL, bty="l", axes=T, ylim=c(min(monthly_listeners$Monthly.Listeners), 200))
 #dev.off()
+
+## Plot 1
+#pdf("release 1.pdf", width=10, height=6)
+plot(monthly_listeners$Date, monthly_listeners$Monthly.Listeners, type="l", lwd=1.2, col=adjustcolor("black", alpha.f=0), xlab="Time", ylab="Monthly Listeners (in k)", main="Song Releases", xaxt=NULL, yaxt=NULL, bty="l", axes=T, ylim=c(min(monthly_listeners$Monthly.Listeners), 200))
+lines(monthly_listeners$Date[1:d1], monthly_listeners$Monthly.Listeners[1:d1], type="l", lwd=2.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.9))
+points(releases$Date[1:6], releases$Monthly.Listeners[1:6], pch=21, cex=1.5, col=SPOT_BLUE_2, bg= "white", lwd = 2)
+#dev.off()
+
+## Plot 2
+#pdf("release 2.pdf", width=10, height=6)
+plot(monthly_listeners$Date, monthly_listeners$Monthly.Listeners, type="l", lwd=1.2, col=adjustcolor("black", alpha.f=0), xlab="Time", ylab="Monthly Listeners (in k)", main="Song Releases", xaxt=NULL, yaxt=NULL, bty="l", axes=T, ylim=c(min(monthly_listeners$Monthly.Listeners), 200))
+lines(monthly_listeners$Date[1:d1], monthly_listeners$Monthly.Listeners[1:d1], type="l", lwd=2.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3))
+points(releases$Date[1:6], releases$Monthly.Listeners[1:6], pch=21, cex=1.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3), bg= "white", lwd = 2)
+lines(monthly_listeners$Date[d1:d2], monthly_listeners$Monthly.Listeners[d1:d2], type="l", lwd=2.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.9))
+points(releases$Date[7:8], releases$Monthly.Listeners[7:8], pch=21, cex=1.5, col=SPOT_BLUE_2, bg= "white", lwd = 2)
+#dev.off()
+
+## Plot 3
+#pdf("release 3.pdf", width=10, height=6)
+plot(monthly_listeners$Date, monthly_listeners$Monthly.Listeners, type="l", lwd=1.2, col=adjustcolor("black", alpha.f=0), xlab="Time", ylab="Monthly Listeners (in k)", main="Song Releases", xaxt=NULL, yaxt=NULL, bty="l", axes=T, ylim=c(min(monthly_listeners$Monthly.Listeners), 200))
+lines(monthly_listeners$Date[1:d1], monthly_listeners$Monthly.Listeners[1:d1], type="l", lwd=2.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3))
+points(releases$Date[1:6], releases$Monthly.Listeners[1:6], pch=21, cex=1.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3), bg= "white", lwd = 2)
+lines(monthly_listeners$Date[d1:d2], monthly_listeners$Monthly.Listeners[d1:d2], type="l", lwd=2.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3))
+points(releases$Date[7:8], releases$Monthly.Listeners[7:8], pch=21, cex=1.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3), bg= "white", lwd = 2)
+lines(monthly_listeners$Date[d2:d3], monthly_listeners$Monthly.Listeners[d2:d3], type="l", lwd=2.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.9))
+points(releases$Date[8:12], releases$Monthly.Listeners[8:12], pch=21, cex=1.5, col=SPOT_BLUE_2, bg= "white", lwd = 2)
+#dev.off()
+
+## Plot 4
+#pdf("release 4.pdf", width=10, height=6)
+plot(monthly_listeners$Date, monthly_listeners$Monthly.Listeners, type="l", lwd=1.2, col=adjustcolor("black", alpha.f=0), xlab="Time", ylab="Monthly Listeners (in k)", main="Song Releases", xaxt=NULL, yaxt=NULL, bty="l", axes=T, ylim=c(min(monthly_listeners$Monthly.Listeners), 200))
+lines(monthly_listeners$Date[1:d1], monthly_listeners$Monthly.Listeners[1:d1], type="l", lwd=2.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3))
+points(releases$Date[1:6], releases$Monthly.Listeners[1:6], pch=21, cex=1.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3), bg= "white", lwd = 2)
+lines(monthly_listeners$Date[d1:d2], monthly_listeners$Monthly.Listeners[d1:d2], type="l", lwd=2.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3))
+points(releases$Date[7:8], releases$Monthly.Listeners[7:8], pch=21, cex=1.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3), bg= "white", lwd = 2)
+lines(monthly_listeners$Date[d2:d3], monthly_listeners$Monthly.Listeners[d2:d3], type="l", lwd=2.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3))
+points(releases$Date[8:12], releases$Monthly.Listeners[8:12], pch=21, cex=1.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3), bg= "white", lwd = 2)
+lines(monthly_listeners$Date[d3:d4], monthly_listeners$Monthly.Listeners[d3:d4], type="l", lwd=2.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.9))
+points(releases$Date[13:15], releases$Monthly.Listeners[13:15], pch=21, cex=1.5, col=SPOT_BLUE_2, bg= "white", lwd = 2)
+#dev.off()
+
+
+## Plot 4b
+date.1 <- which(monthly_listeners$Date == as.Date("2022-08-20"))
+date.2 <- which(monthly_listeners$Date == as.Date("2022-12-31"))
+
+plot(monthly_listeners$Date, monthly_listeners$Monthly.Listeners, type="l", lwd=1.2, col=adjustcolor("black", alpha.f=0), xlab="Time", ylab="Monthly Listeners (in k)", main="Song Releases", xaxt=NULL, yaxt=NULL, bty="l", axes=T, ylim=c(min(monthly_listeners$Monthly.Listeners), 200))
+lines(monthly_listeners$Date[1:d1], monthly_listeners$Monthly.Listeners[1:d1], type="l", lwd=2.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3))
+points(releases$Date[1:6], releases$Monthly.Listeners[1:6], pch=21, cex=1.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3), bg= "white", lwd = 2)
+lines(monthly_listeners$Date[d1:d2], monthly_listeners$Monthly.Listeners[d1:d2], type="l", lwd=2.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3))
+points(releases$Date[7:8], releases$Monthly.Listeners[7:8], pch=21, cex=1.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3), bg= "white", lwd = 2)
+lines(monthly_listeners$Date[d2:d3], monthly_listeners$Monthly.Listeners[d2:d3], type="l", lwd=2.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3))
+points(releases$Date[8:12], releases$Monthly.Listeners[8:12], pch=21, cex=1.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.3), bg= "white", lwd = 2)
+lines(monthly_listeners$Date[d3:d4], monthly_listeners$Monthly.Listeners[d3:d4], type="l", lwd=2.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=0.9))
+points(releases$Date[13:15], releases$Monthly.Listeners[13:15], pch=21, cex=1.5, col=SPOT_BLUE_2, bg= "white", lwd = 2)
+
+segments(x0 = monthly_listeners$Date[date.1], y0 = 0, x1 = monthly_listeners$Date[date.1], y1 = monthly_listeners$Monthly.Listeners[date.1], col = adjustcolor(SPOT_BLUE_2, alpha.f = 0.6), lty = 2, lwd = 1.5)
+segments(x0 = monthly_listeners$Date[date.2], y0 = 0, x1 = monthly_listeners$Date[date.2], y1 = monthly_listeners$Monthly.Listeners[date.2], col = adjustcolor(SPOT_BLUE_2, alpha.f = 0.6), lty = 2, lwd = 1.5)
+
+
+## Plot 5
+#pdf("release 5.pdf", width=10, height=6)
+plot(monthly_listeners$Date, monthly_listeners$Monthly.Listeners, type="l", lwd=2, col=adjustcolor(SPOT_BLUE_2, alpha.f=1), xlab="Time", ylab="Monthly Listeners (in k)", main="Song Releases", xaxt=NULL, yaxt=NULL, bty="l", axes=T, ylim=c(min(monthly_listeners$Monthly.Listeners), 200))
+points(releases$Date, releases$Monthly.Listeners, pch=21, cex=1.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=1), bg= "white", lwd = 2)
+#dev.off()
+
 
 #########################################
 ### LOADING spotify DATASET
@@ -150,7 +215,7 @@ weekly <- as.data.frame(coredata(weekly.xts))
 ### DEFINING CUSTOM PLOT
 #########################################
 
-myplot <- function(data, type="l", lwd = 3, color=SPOT_BLUE_2, alpha = 0.5, xlab = "Weeks", ylab = "Streams (in k)", title = "Streams", xaxt="n", yaxt="n", xlim=c(1,length(weeks)), ylim=c(min(data),max(data))) {
+myplot <- function(data, type="l", lwd = 3, color=SPOT_BLUE_2, alpha = 0.5, xlab = "Weeks", ylab = "Listeners (in k)", title = "Listeners", xaxt="n", yaxt="n", xlim=c(1,length(weeks)), ylim=c(min(data),max(data))) {
   data = data / 1000
   # Plot the curve
   plot(data, type = type, col=color, lwd=lwd, xlab = xlab, ylab = ylab, main = title, xaxt=xaxt, yaxt=yaxt, xlim=xlim, ylim=ylim, axes=FALSE)
@@ -191,46 +256,121 @@ mylines <- function(data, lwd=3, col=SPOT_BLUE){
 
 weeks <- as.Date(time(weekly.xts$streams), format = "%Y-%m-%d")
 
+#pdf("streams.pdf", width=10, height=6)
 myplot(weekly$streams)
+#dev.off()
+#pdf("listeners.pdf", width=10, height=6)
 myplot(weekly$listeners, title = "Listeners", ylab = "Listeners (in k)")
+#dev.off()
+#pdf("followers.pdf", width=10, height=6)
 myplot(weekly$followers*1000, title = "Followers", ylab = "Followers")
+#dev.off()
+#pdf("plst.count.pdf", width=10, height=6)
 myplot(weekly$plst.count*1000, title = "Number of Playlists", ylab = "N. of Playlists")
+#dev.off()
+#pdf("plst.reach.pdf", width=10, height=6)
 myplot(weekly$plst.reach, title = "Potential Audience (from Private Playlists)", ylab = "Potential Audience (in k)")
+#dev.off()
 
-diff.plst.reach <- diff(weekly$plst.reach)
-diff.plst.reach <- c(diff.plst.reach[1], diff.plst.reach)
-myplot(diff.plst.reach)
 
-avg_reach <- weekly$plst.reach / weekly$plst.count
-myplot(avg_reach)
+cor(weekly$streams, weekly$listeners)
+
+## Correlation between Streams and Listeners is about 100%.
+##
+## The "monthly listeners" variable on Spotify for Artists represents 
+## the moving average of an artist's daily listens over a month. This 
+## value offers a more stable and representative view of the artist's audience, 
+## smoothing out daily fluctuations and highlighting long-term trends.
+###
+##  Since we need to choose one, let's decide to analyze the variable "monthly listeners".
 
 # Calculate the correlation matrix 
-cor_matrix = cor(weekly)
+cor_matrix = cor(weekly[, 2:5])
 
-# Create the correlogram 
-corrplot(cor_matrix[2:5, 2:5], type = "upper",  
+# Create the correlogram
+corrplot(cor_matrix, type = "upper",  
          method = "color",
          col= colorRampPalette(c(SPOT_BLUE_2,"white", SPOT_GREEN))(10),
          addCoef.col = "black",  
          tl.col = "black", 
          tl.srt = 45)
 
+
+## Since the "followers" variable poses multicollinearity issues and represents a source 
+## of streams that is not particularly relevant (only 7% of the streams comes from 
+## the fan base, i.e., from "followers"), we decide not to include it in our analysis.
+
+## The variables "playlist count" and "playlist reach" are highly correlated as they explain 
+## each other. This leads to multicollinearity issues, prompting us to explore defining a new 
+## variable through a transformation of these two.
+
+########################################
+### TRYING TO COMBINE "playlist count" AND "playlist reach"
+###
+## 1. Creating a new variable defined as the weekly variation in the number of playlists
+## in which the artist is present
+##
+## at first we apply a moving average filter
+plst.reach.ma <- TTR::SMA(weekly$plst.reach, n = 5, na.rm = TRUE)
+plot(plst.reach.ma, type = "l")
+lines(weekly$plst.reach, col = "blue")
+## then we differenciate
+diff.plst.reach <- diff(plst.reach.ma)
+diff.plst.reach <- c(diff.plst.reach[1], diff.plst.reach)
+plot(diff.plst.reach, type = "l", main = "Weekly Variation in Number of Playlist", ylab = "Playlists Variation")
+
+## 2. Creating a new variable defined as the average number of followers per playlists
+avg.reach <- weekly$plst.reach / weekly$plst.count
+
+ 
+
+# Calculate the correlation matrix 
+cor_matrix_2 = cor(cbind(weekly[, 2:5], avg.reach))
+
+# Create the correlogram 
+corrplot(cor_matrix_2, type = "upper",  
+         method = "color",
+         col= colorRampPalette(c(SPOT_BLUE_2,"white", SPOT_GREEN))(10),
+         addCoef.col = "black",  
+         tl.col = "black", 
+         tl.srt = 45)
+
+## After observing the correlation matrix, we decide to keep the variables 
+## Playlist Count and Average Reach, which represent the quantity of playlists 
+## and their average size, respectively.
+
+# Calculate the correlation matrix 
+cor_matrix_3 = cor(cbind(weekly[, c(2,4)], avg.reach))
+
+# Create the correlogram
+#pdf("Correlation matrix.pdf", width=6, height=6)
+corrplot(cor_matrix_3,
+         main = "Correlation Matrix",
+         type = "upper",  
+         method = "color",
+         col= colorRampPalette(c("white", SPOT_BLUE_3, SPOT_BLUE_2))(30),
+         addCoef.col = "black",  
+         tl.col = "black", 
+         tl.srt = 45,
+         mar = c(2, 2, 2, 2))
+#dev.off()
+
 #########################################
 ### LINEAR MODEL
 #########################################
 
 ## Creating ts object
-streams.ts <- ts(weekly$streams)
+listeners.ts <- ts(weekly$listeners)
 
 ## Plotting weekly data
-myplot(streams.ts)
+myplot(listeners.ts)
 
 ## Fitting Linear Model
-fit_1 <- tslm(streams.ts~trend)
+fit_1 <- tslm(listeners.ts~trend)
 summary(fit_1)
 
 ## Plotting Linear Model
-myplot(streams.ts, title = "Linear Regression")
+myplot(listeners.ts, title = "Linear Regression")
 mylines(fitted(fit_1), col = 2)
 
 ## Residuals
@@ -242,18 +382,18 @@ myplot(res_1/1000,  ylab="Residuals (in k)", xlab="weeks", title = "Residuals", 
 dwtest(fit_1)
 
 ## Plotting Correlogram
-acf(streams.ts)
+acf(listeners.ts)
 
 #########################################
 ### TSLM
 #########################################
 
 ## Include the effect of Audience
-fit_2 <- tslm(streams.ts ~ weekly$plst.reach+avg_reach)
+fit_2 <- tslm(listeners.ts ~ trend + weekly$plst.count + avg.reach)
 summary(fit_2)
 
 ## Plotting the model
-myplot(weekly$streams, type = "l", title = "TSLM")
+myplot(weekly$listeners, type = "l", title = "TSLM")
 mylines(fitted(fit_2), col=2)
 
 ## Residuals
@@ -271,17 +411,17 @@ acf(res_2)
 #########################################
 
 ## Fitting Bass Model
-bm_streams <- BM(weekly$streams, display = F)
+bm_streams <- BM(listeners.ts, display = F)
 summary(bm_streams)
 
 ## Making Prediction With Bass Model
 pred_bm_streams<- predict(bm_streams, newx=c(1:200))
 pred.inst_streams<- make.instantaneous(pred_bm_streams)
 
-myplot(cumsum(streams.ts), lwd = 8, ylab="Cumulative Streams (in k)", xlim=c(1,200), ylim=c(0,10000))
+myplot(cumsum(listeners.ts), lwd = 8, ylab="Cumulative Streams (in k)", xlim=c(1,200), ylim=c(0,10000))
 mylines(pred_bm_streams, col="red")
 
-myplot(streams.ts, xlim=c(1,200))
+myplot(listeners.ts, xlim=c(1,200))
 mylines(pred.inst_streams, col="red")
 
 ## Plotting Residuals
@@ -293,29 +433,29 @@ myplot(bm_streams_res/1000, ylab="Residuals (in k)", xlab="weeks", title = "Resi
 #########################################
 
 ###GBM With Rectangular Shock
-GBM_r1str<- GBM(weekly$streams, shock = "rett", nshock = 1, prelimestimates = c(9.744394e+06, 9.411032e-04, 3.444991e-02, 45, 95, +0.1), display = F)
+GBM_r1str<- GBM(weekly$listeners, shock = "rett", nshock = 1, prelimestimates = c(6.195036e+06, 8.101652e-04, 3.891079e-02, 41, 83, +2), display = F)
 summary(GBM_r1str)
 
 pred_GBMr1str<- predict(GBM_r1str, newx=c(1:200))
 pred_GBMr1str.inst<- make.instantaneous(pred_GBMr1str)
 
-myplot(cumsum(streams.ts), type= "l", lwd = 8, ylab="Cumulative Streams",  xlim=c(1,200), ylim=c(0, max(pred_GBMr1str) * 1.1/1000))
+myplot(cumsum(listeners.ts), type= "l", lwd = 8, ylab="Cumulative Streams",  xlim=c(1,200), ylim=c(0, max(pred_GBMr1str) * 1.1/1000))
 mylines(pred_GBMr1str, col = "red")
 
-myplot(streams.ts, xlim=c(1,200), ylim=c(1, max(pred_GBMr1str.inst)*1.1/1000))
+myplot(listeners.ts, xlim=c(1,200), ylim=c(1, max(pred_GBMr1str.inst)*1.1/1000))
 mylines(pred_GBMr1str.inst, col = "red")
 
 ###GBM With Exponential Shock
-GBM_e1str<- GBM(weekly$streams, shock = "exp", nshock = 1, prelimestimates = c(9.744394e+06, 9.411032e-04, 3.444991e-02, 75, +0.1, +0.1), display = F)
+GBM_e1str<- GBM(listeners.ts, shock = "exp", nshock = 1, prelimestimates = c(6.195036e+06, 8.101652e-04, 3.891079e-02, 75, +0.1, +0.1), display = F)
 summary(GBM_e1str)
 
 pred_GBMe1str<- predict(GBM_e1str, newx=c(1:200))
 pred_GBMe1str.inst<- make.instantaneous(pred_GBMe1str)
 
-myplot(cumsum(streams.ts), lwd = 8,ylab="Cumulative Streams (in k)", xlim=c(1,200), ylim=c(0, max(pred_GBMe1str) * 1.1/1000))
+myplot(cumsum(listeners.ts), lwd = 8,ylab="Cumulative Streams (in k)", xlim=c(1,200), ylim=c(0, max(pred_GBMe1str) * 1.1/1000))
 mylines(pred_GBMe1str, col = "red")
 
-myplot(streams.ts, xlim=c(1,200), ylim=c(1, max(pred_GBMe1str.inst)*1.1/1000))
+myplot(listeners.ts, xlim=c(1,200), ylim=c(1, max(pred_GBMe1str.inst)*1.1/1000))
 mylines(pred_GBMe1str.inst, col = "red")
 
 #########################################
@@ -347,13 +487,13 @@ mylines(pred_GBM_e1lst.inst, col = "red")
 #########################################
 
 ###GGM -> usually performs well with qc=0.001, pc=0.01
-GGM_str<- GGM(weekly$streams, prelimestimates=c(9.664377e+06, 0.001, 0.01, 9.777106e-04, 3.461131e-02), display = F)
+GGM_str<- GGM(listeners.ts, prelimestimates=c(9.664377e+06, 0.001, 0.01, 9.777106e-04, 3.461131e-02), display = F)
 summary(GGM_str)
 
 pred_GGM_str<- predict(GGM_str, newx=c(1:200))
 pred_GGM_str.inst<- make.instantaneous(pred_GGM_str)
 
-myplot(streams.ts, xlim=c(1,200))
+myplot(listeners.ts, xlim=c(1,200))
 mylines(pred_GGM_str.inst, col = "red")
 
 ###Analysis of residuals
@@ -364,7 +504,7 @@ acf<- acf(residuals(GGM_str))
 ### SIMPLE EXPONENTIAL SMOOTHING 
 #########################################
 
-SES_str <- ses(streams.ts, h=50)
+SES_str <- ses(listeners.ts, h=50)
 plot(SES_str)
 
 #########################################
@@ -383,10 +523,10 @@ plot(H_DAMPED_str)
 ### ARIMA
 #########################################
 
-myplot(streams.ts)
+myplot(listeners.ts)
 # The time plot shows some non-stationarity
 # To address the non-stationarity, we will take a first difference of the data
-streams_diff <- diff(streams.ts)
+streams_diff <- diff(listeners.ts)
 myplot(streams_diff, title = "Streams (Differenced)")
 Acf(streams_diff)
 Pacf(streams_diff)
@@ -397,8 +537,8 @@ Pacf(streams_diff)
 ############################
 
 # ARIMA(1,1,0)
-arima1.str <- Arima(streams.ts, order=c(1,1,0))
-myplot(streams.ts)
+arima1.str <- Arima(listeners.ts, order=c(1,1,0))
+myplot(listeners.ts)
 mylines(fitted(arima1.str), col=SPOT_RED, lwd = 3)
 # Checking residuals
 res.a1 <- residuals(arima1.str)
@@ -407,14 +547,14 @@ myplot.res(res.a1)
 Acf(res.a1)
 # Predictions
 pred.a1 <- forecast(arima1.str)
-myplot(streams.ts)
+myplot(listeners.ts)
 mylines(fitted(arima1.str), col=SPOT_RED)
 
 ############################
 
 # ARIMA(0,1,1)
-arima2.str <- Arima(streams.ts, order=c(0,1,1))
-myplot(streams.ts)
+arima2.str <- Arima(listeners.ts, order=c(0,1,1))
+myplot(listeners.ts)
 mylines(fitted(arima2.str), col=SPOT_RED)
 # Checking residuals
 res.a2 <- residuals(arima2.str)
@@ -432,7 +572,7 @@ AIC(arima2.str)
 ############################
 
 # Fitting with auto.arima
-auto.arima<- auto.arima(streams.ts)
+auto.arima<- auto.arima(listeners.ts)
 auto.arima
 # Autoarima confirms our choce, i.e., ARIMA(0,1,1)
 
@@ -443,8 +583,8 @@ checkresiduals(auto.arima)
 ### ARMAX
 #########################################
 
-armax1<- Arima(streams.ts, xreg = weekly$plst.reach, order = c(0,1,1))
-myplot(streams.ts)
+armax1<- Arima(listeners.ts, xreg = weekly$plst.reach, order = c(0,1,1))
+myplot(listeners.ts)
 mylines(fitted(armax1), col = SPOT_RED, lwd=3)
 
 # Checking residuals
@@ -460,7 +600,7 @@ plot(pred.a1)
 #########################################
 
 ###GBM With Rectangular Shock
-GBM_r1str<- GBM(weekly$streams, shock = "rett", nshock = 1, prelimestimates = c(9.744394e+06, 9.411032e-04, 3.444991e-02, 45, 95, +0.1), display = F)
+GBM_r1str<- GBM(listeners.ts, shock = "rett", nshock = 1, prelimestimates = c(9.744394e+06, 9.411032e-04, 3.444991e-02, 45, 95, +0.1), display = F)
 summary(GBM_r1str)
 
 ## GBM Fitted values
@@ -468,15 +608,15 @@ fitted_GBMr1str <- predict(GBM_r1str, newx=c(1:145))
 fitted_GBMr1str.inst<- make.instantaneous(fitted_GBMr1str)
 
 ## Plot cumulative process
-myplot(cumsum(streams.ts), type= "l", lwd = 8, ylab="Cumulative Streams",  xlim=c(1,200), ylim=c(0, max(pred_GBMr1str) * 1.1/1000))
+myplot(cumsum(listeners.ts), type= "l", lwd = 8, ylab="Cumulative Streams",  xlim=c(1,200), ylim=c(0, max(pred_GBMr1str) * 1.1/1000))
 mylines(pred_GBMr1str, col="red")
 
 ## Plot instantaneous process
-myplot(streams.ts, xlim=c(1,200), ylim=c(1, max(pred_GBMr1str.inst)*1.1/1000))
+myplot(listeners.ts, xlim=c(1,200), ylim=c(1, max(pred_GBMr1str.inst)*1.1/1000))
 mylines(pred_GBMr1str.inst, col="red")
 
 ## Computing residuals
-res.GBM_r1str <- streams.ts - fitted_GBMr1str.inst
+res.GBM_r1str <- listeners.ts - fitted_GBMr1str.inst
 myplot.res(res.GBM_r1str)
 Acf(res.GBM_r1str)
 
@@ -490,7 +630,7 @@ myplot.res(res.GBM_r1str)
 mylines(fitted(arima.GBM), col = rgb(1, 0, 0, alpha = 0.75), lwd=3)
 
 ## Plot GBM + Arima fitted values
-myplot(streams.ts)
+myplot(listeners.ts)
 mylines(fitted_GBMr1str.inst + fitted(arima.GBM), col = rgb(1, 0, 0, alpha = 0.75), lwd=3)
 
 ## Predictions (for 30 days)
@@ -500,14 +640,14 @@ pred.arima.GBM <- forecast(arima.GBM, h=30)$mean
 pred.arima.GBM <- c(fitted(arima.GBM), pred.arima.GBM)
 
 ## Plot GBM + Arima predictions
-myplot(streams.ts, xlim=c(1,175), ylim=c(1, max(pred_GBMr1str.inst)/1000), title = "GBM + ARIMA")
+myplot(listeners.ts, xlim=c(1,175), ylim=c(1, max(pred_GBMr1str.inst)/1000), title = "GBM + ARIMA")
 mylines(pred_GBMr1str.inst + pred.arima.GBM, col = rgb(1, 0, 0, alpha = 0.75), lwd=3)
 
 #########################################
 ### MODELS COMPARISONS
 #########################################
 #pdf("models.pdf", width=10, height=6)
-myplot(streams.ts, xlim=c(1,200))
+myplot(listeners.ts, xlim=c(1,200))
 mylines(pred.inst_streams, lwd=2)
 mylines(pred_GBMr1str.inst, lwd=2, col="Red 1")
 mylines(pred_GGM_str.inst, lwd=2, col="Slate Blue 1")
@@ -523,4 +663,5 @@ legend("topleft",
 #########################################
 #########################################
 
-#########################################
+
+
