@@ -19,7 +19,8 @@ SPOT_GREEN = "#1DB954"
 SPOT_BLUE = "#040504"
 SPOT_BLUE_2 = "#1072eb"
 SPOT_BLUE_3 = "#d4e2fc"
-SPOT_RED = adjustcolor("red", alpha.f = 1)
+SPOT_RED = adjustcolor("red", alpha.f = 0.7)
+SPOT_RED_2 = "red"
 
 spotify <- read.csv("data/ch3f.csv")
 playlist <- read.csv("data/playlist.csv")
@@ -215,10 +216,10 @@ weekly <- as.data.frame(coredata(weekly.xts))
 ### DEFINING CUSTOM PLOT
 #########################################
 
-myplot <- function(data, type="l", lwd = 3, color=SPOT_BLUE_2, alpha = 0.5, xlab = "Weeks", ylab = "Listeners (in k)", title = "Listeners", xaxt="n", yaxt="n", xlim=c(1,length(weeks)), ylim=c(min(data),max(data))) {
+myplot <- function(data, type="l", lwd = 3, bty = "l", color=SPOT_BLUE_2, alpha = 0.5, xlab = "Weeks", ylab = "Listeners (in k)", title = "Listeners", xaxt="n", yaxt="n", xlim=c(1,length(weeks)), ylim=c(min(data),max(data))) {
   data = data / 1000
   # Plot the curve
-  plot(data, type = type, col=color, lwd=lwd, xlab = xlab, ylab = ylab, main = title, xaxt=xaxt, yaxt=yaxt, xlim=xlim, ylim=ylim, axes=FALSE)
+  plot(data, type = type, col=color, lwd=lwd, bty = "l", xlab = xlab, ylab = ylab, main = title, xaxt=xaxt, yaxt=yaxt, xlim=xlim, ylim=ylim, axes=T)
   # Add colored area below the curve
   polygon(c(time(data), rev(time(data))), c(rep(0, length(data)), rev(data)), col = adjustcolor(color, alpha.f = 0.3), border = NA)
   # Add grid
@@ -229,24 +230,25 @@ myplot <- function(data, type="l", lwd = 3, color=SPOT_BLUE_2, alpha = 0.5, xlab
   date_idx <- c(1, l, l*2, l*3, l*4, l*5, length(data))
   date_labels <- format(weeks[date_idx], format = "%b '%y")
   axis(1, at=date_idx, labels=date_labels, cex.axis=0.8)
-  axis(2, las=1, cex.axis=0.8, tck=1, col = adjustcolor(SPOT_BLUE, alpha.f = 0.3), lwd = 0, lwd.ticks = 1)
+  axis(2, las=1, cex.axis=0.8)
+  #axis(2, las=1, cex.axis=0.8, tck=1, col = adjustcolor(SPOT_BLUE, alpha.f = 0.3), lwd = 0, lwd.ticks = 1)
 }
-myplot.res <- function(data, type="p", lwd = 3, pch=16, cex=1, color=SPOT_BLUE_2, alpha = 0.5, xlab = "Weeks", ylab = "Residuals (in k)", title = "Residuals", xaxt="n", yaxt="n", xlim=c(1,length(weeks)), ylim=c(min(data),max(data))) {
+
+myplot.res <- function(data, type="p", lwd = 3, bty = "l", pch=16, cex=1.2, color=SPOT_BLUE_2, alpha = 0.5, xlab = "Weeks", ylab = "Residuals (in k)", title = "Residuals", xaxt="n", yaxt="n", xlim=c(1,length(weeks)), ylim=c(min(data),max(data))) {
   data = data / 1000
   # Plot the curve
-  plot(data, type = type, col=color, lwd=lwd, pch=pch, cex=cex, xlab = xlab, ylab = ylab, main = title, xaxt=xaxt, yaxt=yaxt, xlim=xlim, ylim=ylim, axes=FALSE)
+  plot(data, type = type, col=color, lwd=lwd, bty = bty, pch=pch, cex=cex, xlab = xlab, ylab = ylab, main = title, xaxt=xaxt, yaxt=yaxt, xlim=xlim, ylim=ylim, axes=T)
   # Add colored area below the curve
-  polygon(c(time(data), rev(time(data))), c(rep(0, length(data)), rev(data)), col = adjustcolor(color, alpha.f = 0.2), border = NA)
+  #polygon(c(time(data), rev(time(data))), c(rep(0, length(data)), rev(data)), col = adjustcolor(color, alpha.f = 0.2), border = NA)
   # Add grid
   # Customize x-axis labels
   l <- length(data) %/% 6
   date_idx <- c(1, l, l*2, l*3, l*4, l*5, length(data))
   date_labels <- format(weeks[date_idx], format = "%b '%y")
   axis(1, at=date_idx, labels=date_labels, cex.axis=0.8)
-  axis(2, las=1, cex.axis=0.8, tck=1, col = adjustcolor(SPOT_BLUE, alpha.f = 0.3), lwd = 0, lwd.ticks = 1)
-}
+  axis(2, las=1, cex.axis=0.8)}
 
-mylines <- function(data, lwd=3, col=SPOT_BLUE){
+mylines <- function(data, lwd=3, col=2){
   lines(data/1000, lwd=lwd, col=col)
 }
 
@@ -370,19 +372,21 @@ fit_1 <- tslm(listeners.ts~trend)
 summary(fit_1)
 
 ## Plotting Linear Model
+
+#pdf("tslm 1.pdf", width=10, height=6)
 myplot(listeners.ts, title = "Linear Regression")
 mylines(fitted(fit_1), col = 2)
+#dev.off()
 
 ## Residuals
 res_1 <- residuals(fit_1)
-myplot(res_1/1000,  ylab="Residuals (in k)", xlab="weeks", title = "Residuals", type = "p")
-#abline(h=0, lty="dashed", col=SPOT_GREEN)
+myplot.res(res_1)
 
 ## Durbin Watson test for Autocorrelation
 dwtest(fit_1)
 
 ## Plotting Correlogram
-acf(listeners.ts)
+acf(res_1, main = "Correlogram")
 
 #########################################
 ### TSLM
@@ -393,19 +397,23 @@ fit_2 <- tslm(listeners.ts ~ trend + weekly$plst.count + avg.reach)
 summary(fit_2)
 
 ## Plotting the model
+pdf("tslm 2.pdf", width=10, height=6)
 myplot(weekly$listeners, type = "l", title = "TSLM")
 mylines(fitted(fit_2), col=2)
+dev.off()
 
 ## Residuals
 res_2 <- residuals(fit_2)
-myplot(res_2/1000, ylab="Residuals (in k)", xlab="weeks", title = "Residuals", type = "p")
-#abline(h=0, lty="dashed", col=SPOT_GREEN)
+pdf("res 2.pdf", width=8, height=6)
+myplot.res(res_2)
+dev.off()
 
 ## Durbin Watson test for Autocorrelation
 dwtest(fit_2)
 
-acf(res_2)
-
+pdf("acf res 2.pdf", width=8, height=6)
+acf(res_2, bty = "l")
+dev.off()
 #########################################
 ### BASS MODEL
 #########################################
@@ -419,14 +427,14 @@ pred_bm_streams<- predict(bm_streams, newx=c(1:200))
 pred.inst_streams<- make.instantaneous(pred_bm_streams)
 
 myplot(cumsum(listeners.ts), lwd = 8, ylab="Cumulative Streams (in k)", xlim=c(1,200), ylim=c(0,10000))
-mylines(pred_bm_streams, col="red")
+mylines(pred_bm_streams, col=2)
 
 myplot(listeners.ts, xlim=c(1,200))
-mylines(pred.inst_streams, col="red")
+mylines(pred.inst_streams, col=2)
 
 ## Plotting Residuals
 bm_streams_res <- residuals(bm_streams)
-myplot(bm_streams_res/1000, ylab="Residuals (in k)", xlab="weeks", title = "Residuals", type = 'p')
+myplot.res(bm_streams_res)
 
 #########################################
 ### GENERALIZED BASS MODEL
@@ -440,61 +448,57 @@ pred_GBMr1str<- predict(GBM_r1str, newx=c(1:200))
 pred_GBMr1str.inst<- make.instantaneous(pred_GBMr1str)
 
 myplot(cumsum(listeners.ts), type= "l", lwd = 8, ylab="Cumulative Streams",  xlim=c(1,200), ylim=c(0, max(pred_GBMr1str) * 1.1/1000))
-mylines(pred_GBMr1str, col = "red")
+mylines(pred_GBMr1str, col = 2)
 
 myplot(listeners.ts, xlim=c(1,200), ylim=c(1, max(pred_GBMr1str.inst)*1.1/1000))
-mylines(pred_GBMr1str.inst, col = "red")
+mylines(pred_GBMr1str.inst, col = 2)
 
 ###GBM With Exponential Shock
-GBM_e1str<- GBM(listeners.ts, shock = "exp", nshock = 1, prelimestimates = c(6.195036e+06, 8.101652e-04, 3.891079e-02, 75, +0.1, +0.1), display = F)
+GBM_e1str<- GBM(listeners.ts, shock = "exp", nshock = 1, prelimestimates = c(6.195036e+06, 8.101652e-04, 3.891079e-02, 83, -0.08, +0.09), display = F)
 summary(GBM_e1str)
 
 pred_GBMe1str<- predict(GBM_e1str, newx=c(1:200))
 pred_GBMe1str.inst<- make.instantaneous(pred_GBMe1str)
 
 myplot(cumsum(listeners.ts), lwd = 8,ylab="Cumulative Streams (in k)", xlim=c(1,200), ylim=c(0, max(pred_GBMe1str) * 1.1/1000))
-mylines(pred_GBMe1str, col = "red")
+mylines(pred_GBMe1str, col = 2)
 
 myplot(listeners.ts, xlim=c(1,200), ylim=c(1, max(pred_GBMe1str.inst)*1.1/1000))
-mylines(pred_GBMe1str.inst, col = "red")
+mylines(pred_GBMe1str.inst, col = 2)
 
-#########################################
-### BM e GBM LISTENERS
-#########################################
+###GBM 2Exp shock
+GBM_e2str<- GBM(listeners.ts, shock = "exp", nshock = 2, prelimestimates = c(6.195036e+06, 8.101652e-04, 3.891079e-02, 41, +0.1, +0.1, 83, -0.08, +0.09), display = F)
+summary(GBM_e2str)
 
-## Creating ts object
-listeners.ts <- ts(weekly$listeners)
+pred_GBMe2str<- predict(GBM_e2str, newx=c(1:200))
+pred_GBMe2str.inst<- make.instantaneous(pred_GBMe2str)
 
-## Fitting Bass Model
-bm_list <- BM(listeners.ts, display = F)
-summary(bm_list)
+myplot(cumsum(listeners.ts), lwd = 8,ylab="Cumulative Streams (in k)", xlim=c(1,200), ylim=c(0, max(pred_GBMe2str) * 1.1/1000))
+mylines(pred_GBMe2str, col = 2)
 
-###GBM With Exponential Shock (with Listeners)
-GBM_e1lst<- GBM(listeners.ts, shock = "exp", nshock = 1, prelimestimates = c(6.195036e+06, 8.101652e-04, 3.891079e-02, 70, +0.1, +0.1), display = F)
-summary(GBM_e1lst)
+myplot(listeners.ts, xlim=c(1,200), ylim=c(1, max(pred_GBMe2str.inst)*1.1/1000))
+mylines(pred_GBMe2str.inst, col = 2)
 
-pred_GBM_e1lst<- predict(GBM_e1lst, newx=c(1:200))
-pred_GBM_e1lst.inst<- make.instantaneous(pred_GBM_e1lst)
+## R^2 tilde: per modelli GBM con shock exp
+## R^2 tilde > 0.3: modello più complesso è significan
+## conviene usarlo piuttosto che usare quello con un solo shock
 
-myplot(cumsum(listeners.ts), lwd = 8,ylab="Cumulative Listeners (in k)", xlim=c(1,200), ylim=c(0, max(pred_GBM_e1lst) * 1.1/1000))
-mylines(pred_GBM_e1lst, col = "red")
-
-myplot(listeners.ts, xlim=c(1,200), ylim=c(1, max(pred_GBM_e1lst.inst)*1.1/1000))
-mylines(pred_GBM_e1lst.inst, col = "red")
+r2_tilde <- (0.999691 - 0.997783)/(1 - 0.997783)
+r2_tilde
 
 #########################################
 ### GUSEO-GUIDOLIN MODEL
 #########################################
 
 ###GGM -> usually performs well with qc=0.001, pc=0.01
-GGM_str<- GGM(listeners.ts, prelimestimates=c(9.664377e+06, 0.001, 0.01, 9.777106e-04, 3.461131e-02), display = F)
+GGM_str<- GGM(listeners.ts, prelimestimates=c(6.195036e+06, 0.001, 0.01, 8.101652e-04, 3.891079e-02), display = F)
 summary(GGM_str)
 
 pred_GGM_str<- predict(GGM_str, newx=c(1:200))
 pred_GGM_str.inst<- make.instantaneous(pred_GGM_str)
 
 myplot(listeners.ts, xlim=c(1,200))
-mylines(pred_GGM_str.inst, col = "red")
+mylines(pred_GGM_str.inst, col = 2)
 
 ###Analysis of residuals
 res_GGM_str<- residuals(GGM_str)
@@ -511,10 +515,10 @@ plot(SES_str)
 ### HOLT'S METHODS 
 #########################################
 
-HOLT_str <- holt(weekly$streams, h = 50)
+HOLT_str <- holt(listeners.ts, h = 12)
 plot(HOLT_str)
 
-H_DAMPED_str <- holt(weekly$streams, h = 50, damped = T)
+H_DAMPED_str <- holt(listeners.ts, h = 12, damped = T)
 plot(H_DAMPED_str)
 
 #H_WINTERS_str <- HoltWinters(streams)
@@ -594,6 +598,26 @@ Acf(res.a1)
 # Predictions with external regressors
 pred.a1 <- forecast(armax1, xreg = weekly$plst.reach, h=30)
 plot(pred.a1)
+
+#########################################
+### TSLM + ARIMA
+#########################################
+
+## Fitting Arima to Residuals
+arima.tslm <- auto.arima(res_2)
+#plot(forecast(arima.tslm))
+## Arima (1,0,1) is chosen
+
+## Plot Arima fitted values for residuals
+myplot.res(res_2)
+mylines(fitted(arima.tslm), col = rgb(1, 0, 0, alpha = 0.6), lwd=3)
+
+## Plot GBM + Arima fitted values
+
+#pdf("tslm + arima.pdf", width=10, height=6)
+myplot(listeners.ts)
+mylines(fitted(fit_2) + fitted(arima.tslm), col = 2, lwd=3)
+#dev.off()
 
 #########################################
 ### GBM + ARIMA
