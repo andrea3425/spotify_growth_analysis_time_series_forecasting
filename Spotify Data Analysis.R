@@ -23,6 +23,7 @@ SPOT_RED = adjustcolor("red", alpha.f = 0.7)
 SPOT_RED_2 = "red"
 
 spotify <- read.csv("data/ch3f.csv")
+spotify.2 <- read.csv("data/ch3f_update.csv")
 playlist <- read.csv("data/playlist.csv")
 monthly_listeners <- read.csv("data/monthly_listeners.csv")
 
@@ -36,7 +37,7 @@ Sys.setlocale("LC_TIME", "en_US")
 ## Turning Dates to the correct format
 monthly_listeners$Date <- as.Date(monthly_listeners$Date, format = "%b %d, %Y")
 
-## Selecting only needed rows and cols
+## Selecting needed rows and cols
 end = "2023-10-18"
 start_idx <- 1
 end_idx <- which(monthly_listeners$Date == as.Date(end))
@@ -129,6 +130,17 @@ plot(monthly_listeners$Date, monthly_listeners$Monthly.Listeners, type="l", lwd=
 points(releases$Date, releases$Monthly.Listeners, pch=21, cex=1.5, col=adjustcolor(SPOT_BLUE_2, alpha.f=1), bg= "white", lwd = 2)
 #dev.off()
 
+#########################################
+### LOADING spotify.2 DATASET
+#########################################
+
+idx.1 <- 1
+idx.2 <- 365
+
+spotify.full <- rbind(spotify[idx.1:idx.2, ], spotify.2)
+
+## Turning Dates to the correct format
+spotify.full$date <- as.Date(spotify.full$date, format = "%Y-%m-%d")
 
 #########################################
 ### LOADING spotify DATASET
@@ -184,6 +196,12 @@ data <- cbind(spotify, df_3[, 2:3])
 
 streams_xts <- xts(data$streams, order.by = data$date)
 streams <- apply.weekly(streams_xts, FUN = sum)
+
+listeners.fut_xts <- xts(spotify.full$listeners, order.by = spotify.full$date)
+listeners.fut <- apply.weekly(listeners.fut_xts, FUN = sum)
+listeners.fut <- coredata(listeners.fut)[2:(length(listeners.fut)-1)]
+myplot(listeners.fut)
+mylines(weekly$listeners, col = 2)
 
 listeners_xts <- xts(data$listeners, order.by = data$date)
 listeners <- apply.weekly(listeners_xts, FUN = sum)
@@ -373,10 +391,10 @@ summary(fit_1)
 
 ## Plotting Linear Model
 
-#pdf("tslm 1.pdf", width=10, height=6)
+pdf("tslm 1.pdf", width=10, height=6)
 myplot(listeners.ts, title = "Linear Regression")
 mylines(fitted(fit_1), col = 2)
-#dev.off()
+dev.off()
 
 ## Residuals
 res_1 <- residuals(fit_1)
@@ -450,8 +468,10 @@ pred_GBMr1str.inst<- make.instantaneous(pred_GBMr1str)
 myplot(cumsum(listeners.ts), type= "l", lwd = 8, ylab="Cumulative Streams",  xlim=c(1,200), ylim=c(0, max(pred_GBMr1str) * 1.1/1000))
 mylines(pred_GBMr1str, col = 2)
 
+pdf("GBM Rec.pdf", width=10, height=6)
 myplot(listeners.ts, xlim=c(1,200), ylim=c(1, max(pred_GBMr1str.inst)*1.1/1000))
 mylines(pred_GBMr1str.inst, col = 2)
+dev.off()
 
 ###GBM With Exponential Shock
 GBM_e1str<- GBM(listeners.ts, shock = "exp", nshock = 1, prelimestimates = c(6.195036e+06, 8.101652e-04, 3.891079e-02, 83, -0.08, +0.09), display = F)
@@ -476,8 +496,10 @@ pred_GBMe2str.inst<- make.instantaneous(pred_GBMe2str)
 myplot(cumsum(listeners.ts), lwd = 8,ylab="Cumulative Streams (in k)", xlim=c(1,200), ylim=c(0, max(pred_GBMe2str) * 1.1/1000))
 mylines(pred_GBMe2str, col = 2)
 
+pdf("GBM 2Exp.pdf", width=10, height=6)
 myplot(listeners.ts, xlim=c(1,200), ylim=c(1, max(pred_GBMe2str.inst)*1.1/1000))
 mylines(pred_GBMe2str.inst, col = 2)
+dev.off()
 
 ## R^2 tilde: per modelli GBM con shock exp
 ## R^2 tilde > 0.3: modello più complesso è significan
@@ -516,10 +538,34 @@ plot(SES_str)
 #########################################
 
 HOLT_str <- holt(listeners.ts, h = 12)
-plot(HOLT_str)
 
 H_DAMPED_str <- holt(listeners.ts, h = 12, damped = T)
-plot(H_DAMPED_str)
+
+#pdf("Holt.pdf", width=10, height=6)
+plot(HOLT_str, lwd = 1.5, bty="l", col = 1)
+lines(H_DAMPED_str$mean, col = 2, lwd = 2)
+legend("topleft", 
+       legend=c("Holt", "Damped Holt"),  # Nomi dei modelli
+       col=c(SPOT_BLUE_2, 2),  # Colori corrispondenti
+       lwd=c(2, 2),  # Spessori delle linee
+       box.lwd = 0
+       #bg="transparent",  # Sfondo trasparente
+) 
+#dev.off()
+
+## Damped Holt predictions
+#pdf("Damped Holt.pdf", width=10, height=6)
+plot(H_DAMPED_str, lwd = 1.5, bty="l", col = 1, xaxt = "n")
+lines(H_DAMPED_str$mean, col = 2, lwd = 3)
+lines(listeners.fut, col = SPOT_BLUE_2, lwd = 3)
+#dev.off()
+
+#pdf("Holt res.pdf", width=10, height=6)
+myplot.res(H_DAMPED_str$residuals)
+#dev.off()
+#pdf("Holt acf.pdf", width=10, height=6)
+Acf(H_DAMPED_str$residuals)
+#dev.off()
 
 #H_WINTERS_str <- HoltWinters(streams)
 
@@ -603,10 +649,16 @@ plot(pred.a1)
 ### TSLM + ARIMA
 #########################################
 
-## Fitting Arima to Residuals
+## Fitting Arima to Residuals of TSLM
 arima.tslm <- auto.arima(res_2)
 #plot(forecast(arima.tslm))
 ## Arima (1,0,1) is chosen
+#pdf("TSLM + ARIMA res.pdf", width=10, height=6)
+myplot.res(residuals(arima.tslm))
+#dev.off()
+#pdf("TSLM + ARIMA acf.pdf", width=10, height=6)
+Acf(residuals(arima.tslm))
+#dev.off()
 
 ## Plot Arima fitted values for residuals
 myplot.res(res_2)
@@ -619,12 +671,20 @@ myplot(listeners.ts)
 mylines(fitted(fit_2) + fitted(arima.tslm), col = 2, lwd=3)
 #dev.off()
 
+#pdf("tslm + arima res.pdf", width=10, height=6)
+myplot.res(residuals(arima.tslm))
+#dev.off()
+
+#pdf("tslm + arima acf.pdf", width=10, height=6)
+Acf(residuals(arima.tslm))
+#dev.off()
+
 #########################################
 ### GBM + ARIMA
 #########################################
 
 ###GBM With Rectangular Shock
-GBM_r1str<- GBM(listeners.ts, shock = "rett", nshock = 1, prelimestimates = c(9.744394e+06, 9.411032e-04, 3.444991e-02, 45, 95, +0.1), display = F)
+GBM_r1str<- GBM(weekly$listeners, shock = "rett", nshock = 1, prelimestimates = c(6.195036e+06, 8.101652e-04, 3.891079e-02, 41, 83, +2), display = F)
 summary(GBM_r1str)
 
 ## GBM Fitted values
@@ -633,16 +693,22 @@ fitted_GBMr1str.inst<- make.instantaneous(fitted_GBMr1str)
 
 ## Plot cumulative process
 myplot(cumsum(listeners.ts), type= "l", lwd = 8, ylab="Cumulative Streams",  xlim=c(1,200), ylim=c(0, max(pred_GBMr1str) * 1.1/1000))
-mylines(pred_GBMr1str, col="red")
+mylines(pred_GBMr1str, col=2)
 
 ## Plot instantaneous process
 myplot(listeners.ts, xlim=c(1,200), ylim=c(1, max(pred_GBMr1str.inst)*1.1/1000))
-mylines(pred_GBMr1str.inst, col="red")
+mylines(pred_GBMr1str.inst, col=2)
 
 ## Computing residuals
 res.GBM_r1str <- listeners.ts - fitted_GBMr1str.inst
+
+#pdf("GBM Rec res.pdf", width=10, height=6)
 myplot.res(res.GBM_r1str)
+#dev.off()
+
+#pdf("GBM Rec acf.pdf", width=10, height=6)
 Acf(res.GBM_r1str)
+#dev.off()
 
 ## Fitting Arima to Residuals
 arima.GBM <- auto.arima(res.GBM_r1str)
@@ -654,8 +720,17 @@ myplot.res(res.GBM_r1str)
 mylines(fitted(arima.GBM), col = rgb(1, 0, 0, alpha = 0.75), lwd=3)
 
 ## Plot GBM + Arima fitted values
+#pdf("GBM + ARIMA.pdf", width=10, height=6)
 myplot(listeners.ts)
-mylines(fitted_GBMr1str.inst + fitted(arima.GBM), col = rgb(1, 0, 0, alpha = 0.75), lwd=3)
+mylines(fitted_GBMr1str.inst + fitted(arima.GBM), col = 2, lwd=3)
+#dev.off()
+
+#pdf("GBM + ARIMA res.pdf", width=10, height=6)
+myplot.res(residuals(arima.GBM))
+#dev.off()
+#pdf("GBM + ARIMA acf.pdf", width=10, height=6)
+Acf(residuals(arima.GBM))
+#dev.off()
 
 ## Predictions (for 30 days)
 pred_GBMr1str <- predict(GBM_r1str, newx=c(1:175))
@@ -664,9 +739,11 @@ pred.arima.GBM <- forecast(arima.GBM, h=30)$mean
 pred.arima.GBM <- c(fitted(arima.GBM), pred.arima.GBM)
 
 ## Plot GBM + Arima predictions
+#pdf("GBM + ARIMA pred.pdf", width=10, height=6)
 myplot(listeners.ts, xlim=c(1,175), ylim=c(1, max(pred_GBMr1str.inst)/1000), title = "GBM + ARIMA")
+mylines(listeners.fut, col = SPOT_BLUE_2, lwd=3)
 mylines(pred_GBMr1str.inst + pred.arima.GBM, col = rgb(1, 0, 0, alpha = 0.75), lwd=3)
-
+#dev.off()
 #########################################
 ### MODELS COMPARISONS
 #########################################
